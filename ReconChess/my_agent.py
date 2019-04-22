@@ -65,7 +65,7 @@ class MyAgent(Player):
         [
             (A8, Piece(ROOK, BLACK)), (B8, Piece(KNIGHT, BLACK)), (C8, Piece(BISHOP, BLACK)),
             (A7, Piece(PAWN, BLACK)), (B7, Piece(PAWN, BLACK)), (C7, Piece(PAWN, BLACK)),
-            (A6, None), (B6, None), (C8, None)
+            (A6, None), (B6, None), (C6, None)
         ]
         """
         # TODO: implement this method

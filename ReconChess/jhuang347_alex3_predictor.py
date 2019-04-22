@@ -26,6 +26,15 @@ class Predictor(object):
         for ii in range(8, 16):
             self.idx2pieces.append((chess.PAWN, ii - 7))
 
+        # Type
+        self.piece_type2indices = dict()
+        for ii in range(0, 16):
+            piece_type = self.idx2pieces[ii][0]
+            if piece_type in self.piece_type2indices:
+                self.piece_type2indices[piece_type].append(ii)
+            else:
+                self.piece_type2indices[piece_type] = [ii]
+
         # Setup Probabilies
         self.probability_board = np.zeros((16, 8, 8), dtype=np.float)
         for jj in range(0, 2):
@@ -38,6 +47,12 @@ class Predictor(object):
 
         # Map 2 Games pieces
         self.update_piece_location_dict()
+
+
+    def predict_board(self, your_board):
+        self.update_piece_location_dict()
+        self.set_pieces_position(your_board)
+        return self.get_predicted_board()
 
         
     def get_predicted_board(self):
@@ -59,8 +74,12 @@ class Predictor(object):
         # Save Positions
         for ii in range(16):
             position = np.unravel_index(self.probability_board[ii].argmax(), (8, 8))
+            
+            # Check if dead
             if self.probability_board[ii, position[0], position[1]] == 0.0:
                 position = (-1, -1)
+            
+            # Save
             self.loc2piece_idx[position] = ii
             self.piece_idx2loc[ii] = np.array(position)
 
@@ -82,12 +101,13 @@ class Predictor(object):
             position = self.piece_idx2loc[ii]
 
             # Check if Alive
-            if position != (-1, -1):
-                piece = chess.piece(self.idx2pieces[ii][0], self.opponentcolor)
+            if tuple(position) != (-1, -1):
+                piece = chess.Piece(self.idx2pieces[ii][0], self.opponentcolor)
                 square = self.point2square(position)
 
                 # Set Piece
-                self.predicted_board.set_piece_at(square, piece)
+                if self.predicted_board.piece_type_at(square) == None:
+                    self.predicted_board.set_piece_at(square, piece)
 
 
 
@@ -155,19 +175,53 @@ class Predictor(object):
             pass
 
 
-    def update_sense(self, sense):
-        pass
-        
+    def sense_update(self, sense_result):
+        for result in sense_result:
+            position = self.square2point(result[0])
+            piece = result[1]
+
+            if piece == None or piece.color == self.mycolor:
+                self.probability_board[:, position[0], position[1]] = 0
+            else:
+                # Find most likely piece was moved to get there
+                best_prob = 0.0
+                best_idx = None
+                for idx in self.piece_type2indices[piece.piece_type]:
+                    current_posiiton = self.piece_idx2loc[idx]
+                    current_posiiton = self.point2square(current_posiiton)
+                    prob = self.probability_board[idx, position[0], position[1]] + (1 - chess.square_distance(result[0], current_posiiton)/16.0)
+
+                    if prob >= best_prob:
+                        best_prob = prob
+                        best_idx = idx
+                
+                # Changed Probablility to match Sense
+                self.probability_board[best_idx, :, :] = 0.0
+                self.probability_board[best_idx, position[0], position[1]] = 1.0
 
 
 
 def main():
     # TEST
-    predictor = Predictor(chess.BLACK)
+    predictor = Predictor(chess.WHITE)
 
     predictor.opponent_prob_step()
-    print(predictor.probability_board[8])
-    
+    print(predictor.probability_board[2])
+    board = chess.Board()
+    board.clear_board()
+    print(predictor.predict_board(board))
+    print(predictor.probability_board[2])
+
+
+    sense_results = [(chess.A8, chess.Piece(chess.ROOK, chess.BLACK)), (chess.B8, chess.Piece(chess.KNIGHT, chess.BLACK)), (chess.C8, chess.Piece(chess.BISHOP, chess.BLACK)),
+                    (chess.A7, chess.Piece(chess.PAWN, chess.BLACK)), (chess.B7, None), (chess.C7, chess.Piece(chess.PAWN, chess.BLACK)),
+                    (chess.A6, None), (chess.B6, chess.Piece(chess.PAWN, chess.BLACK)), (chess.C6, None)
+                    ]
+    predictor.sense_update(sense_results)
+    board.clear_board()
+    print(predictor.predict_board(board))
+    print(predictor.probability_board[2])
+
 
 
 if __name__ == "__main__":
