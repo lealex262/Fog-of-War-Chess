@@ -20,7 +20,7 @@ from jhuang347_alex3_scouter import Scouter
 class MyAgent(Player):
 
     def __init__(self):
-        self.turn = 0
+        self.turn = -1
         self.board = chess.Board()
         
     def handle_game_start(self, color, board):
