@@ -36,6 +36,7 @@ class MyAgent(Player):
         # TODO: implement this method
         self.scouter = Scouter(color)
         self.predictor = Predictor(color)
+        self.players_board = board
         
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -96,7 +97,7 @@ class MyAgent(Player):
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
         predicted_board = self.predictor.predict_board(self.players_board)
-        choice = find_best_move(self.board, min(5, seconds_left))
+        choice = find_best_move(predicted_board, min(5, seconds_left))
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
@@ -113,6 +114,7 @@ class MyAgent(Player):
         # TODO: implement this method
         success = (requested_move == taken_move)
         self.predictor.update_your_move(self.players_board, success, taken_move, captured_piece, captured_square)
+        self.players_board.push(taken_move)
         pass
         
     def handle_game_end(self, winner_color, win_reason):  # possible GameHistory object...
