@@ -112,8 +112,19 @@ class Predictor(object):
 
 
     def update_opponent_move(self, captured_piece, captured_square):
+
+        if captured_piece:
+            # Find most likely piece was moved to get there
+            position = self.square2point(captured_square)
+            best_idx = self.mostly_likely_piece(captured_square)
+            
+            # Changed Probablility to match Sense
+            self.probability_board[best_idx, :, :] = 0.0
+            self.probability_board[best_idx, position[0], position[1]] = 1.0
+
+        else:
+            self.opponent_prob_step()
         
-        pass
 
 
     def opponent_prob_step(self):
@@ -170,10 +181,15 @@ class Predictor(object):
             self.set_your_board(board)
             
             if captured_piece:
-                pass
+                # Find most likely piece was moved to get there
+                best_idx = self.mostly_likely_piece(captured_square)
+                
+                # Changed Probablility to match observation
+                self.probability_board[best_idx, :, :] = 0.0
         else:
+            # TODO Not Sure what to do here
             pass
-
+ 
 
     def sense_update(self, sense_result):
         for result in sense_result:
@@ -199,6 +215,23 @@ class Predictor(object):
                 self.probability_board[best_idx, :, :] = 0.0
                 self.probability_board[best_idx, position[0], position[1]] = 1.0
 
+
+    def mostly_likely_piece(self, captured_square):
+        position = self.square2point(captured_square)
+
+        # Find most likely piece was moved to get there
+        best_prob = 0.0
+        best_idx = None
+        for idx in range(0, 16):
+            current_posiiton = self.piece_idx2loc[idx]
+            current_posiiton = self.point2square(current_posiiton)
+            prob = self.probability_board[idx, position[0], position[1]] + (1 - chess.square_distance(captured_square, current_posiiton)/16.0)
+
+            if prob >= best_prob:
+                best_prob = prob
+                best_idx = idx
+
+        return best_idx
 
 
 def main():
