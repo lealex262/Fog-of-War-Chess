@@ -14,6 +14,7 @@ class Scouter:
         else:
             bv = 0
             bs = None
+            # TODO: Choose randomly between equally past histories
             for fil in range(1, 8):
                 for rank in range(1, 8):
                     sq = chess.square(fil, rank)
@@ -26,6 +27,7 @@ class Scouter:
 
         
     def update_scout_history(self, move):
+        # TODO: Scout history should be 0 where our pieces are
         self.scout_history = [x + 1 for x in self.scout_history]
         fil, rank = chess.square_file(move), chess.square_rank(move)
         for i in [-1, 0, 1]:
@@ -37,10 +39,12 @@ class Scouter:
 
     def choose_sense(self, possible_sense, possible_moves, turn):
         if turn == 0:
-            if color:
+            if self.color:
                 self.next_scout = chess.Square(45)
             else:
                 self.next_scout = chess.Square(21)
+        print(turn)
+        print(self.next_scout)
         self.update_scout_history(self.next_scout)
         return self.next_scout
 

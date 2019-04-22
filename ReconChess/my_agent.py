@@ -21,7 +21,7 @@ from jhuang347_alex3_predictor import Predictor
 class MyAgent(Player):
 
     def __init__(self):
-        self.turn = 0
+        self.turn = -1
         self.board = chess.Board()
         self.players_board = None
         

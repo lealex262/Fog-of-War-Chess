@@ -1,7 +1,6 @@
 import chess
 import time
 
-
 def material_difference(board):
     wK, wQ, wR, wB, wN, wP = 200, 9, 5, 3, 3, 1
     nWK = len(board.pieces(chess.KING, True))
@@ -18,7 +17,8 @@ def material_difference(board):
     nBN = len(board.pieces(chess.KNIGHT, False))
     nBP = len(board.pieces(chess.PAWN, False))
     
-    return wK * (nWK - nBK) + wQ * (nWQ - nBQ) + wR * (nWR - nBR) + wB * (nWB - nBB) + wN * (nWN - nBN) + wP * (nWP - nBP)
+    md = wK * (nWK - nBK) + wQ * (nWQ - nBQ) + wR * (nWR - nBR) + wB * (nWB - nBB) + wN * (nWN - nBN) + wP * (nWP - nBP)
+    return md
 
 def piece_values(board, color):
     if not color:
@@ -35,10 +35,15 @@ def piece_values(board, color):
 def position_difference(board):
     return piece_values(board, True) - piece_values(board, False)
 
+def show_evaluate(board):
+    md = material_difference(board)
+    pd = position_difference(board)
+    return md, pd, md + pd / 100.
+
 def evaluate(board):
     md = material_difference(board)
     pd = position_difference(board)
-    return md + pd
+    return md + pd / 100.
 
 
 def piece_table(piece_type, position):
@@ -106,7 +111,6 @@ def piece_table(piece_type, position):
     
     return mapping[piece_type][position];
 
-
 def minimax(node, depth, isMaximizingPlayer, alpha, beta, max_depth, time_remaining):
     now = time.time()
     if time_remaining < 0.1:
@@ -117,7 +121,7 @@ def minimax(node, depth, isMaximizingPlayer, alpha, beta, max_depth, time_remain
     if isMaximizingPlayer:
         bestVal = -999999999
         bestBoard = None
-        for move in node.generate_legal_moves():
+        for move in node.generate_pseudo_legal_moves():
             node.push(move)
             value, board = minimax(node, depth+1, False, alpha, beta, max_depth, time_remaining - (time.time() - now))
             if value is None:
@@ -134,7 +138,7 @@ def minimax(node, depth, isMaximizingPlayer, alpha, beta, max_depth, time_remain
     else:
         bestVal = 999999999
         bestBoard = None
-        for move in node.generate_legal_moves():
+        for move in node.generate_pseudo_legal_moves():
             node.push(move)
             value, board = minimax(node, depth+1, True, alpha, beta, max_depth, time_remaining - (time.time() - now))
             if value is None:
@@ -148,19 +152,21 @@ def minimax(node, depth, isMaximizingPlayer, alpha, beta, max_depth, time_remain
                 break
         return bestVal, bestBoard
     
-def find_best_move(board, time_remaining):
+def find_best_move(board, time_remaining, color=True):
     now = time.time()
-    move, b = minimax(board, 0, True, -float('inf'), float('inf'), 1, time_remaining)
+    value, b = minimax(board.copy(stack=False), 0, color, -float('inf'), float('inf'), 1, time_remaining)
     depth = 2
     td = time.time() - now
     while td < time_remaining:
-        candidate, cb = minimax(board, 0, True, -float('inf'), float('inf'), depth, time_remaining - td)
+        candidate, cb = minimax(board, 0, color, -float('inf'), float('inf'), depth, time_remaining - td)
         td = time.time() - now
-        if candidate is None:
+        if cb is None:
             break
         else:
-            move = candidate
+            value = candidate
             b = cb
             depth += 1
-    print("Reached depth " + str(depth))
-    return move, b
+            
+    if b is None:
+        return None
+    return b.move_stack[0]
