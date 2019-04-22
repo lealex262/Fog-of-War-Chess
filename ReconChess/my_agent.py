@@ -12,13 +12,16 @@ Source:         Adapted from recon-chess (https://pypi.org/project/reconchess/)
 import random
 import chess
 from player import Player
+from jhuang347_alex3_mover import find_best_move
+from jhuang347_alex3_scouter import Scouter
 
 
 # TODO: Rename this class to what you would like your bot to be named during the game.
 class MyAgent(Player):
 
     def __init__(self):
-        pass
+        self.turn = 0
+        self.board = chess.Board()
         
     def handle_game_start(self, color, board):
         """
@@ -29,7 +32,7 @@ class MyAgent(Player):
         :return:
         """
         # TODO: implement this method
-        pass
+        self.scouter = Scouter(color)
         
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -38,7 +41,8 @@ class MyAgent(Player):
         :param captured_piece: bool - true if your opponents captured your piece with their last move
         :param captured_square: chess.Square - position where your piece was captured
         """
-        pass
+        self.scouter.handle_opponent_move(captured_piece, captured_square)
+        self.turn += 1
 
     def choose_sense(self, possible_sense, possible_moves, seconds_left):
         """
@@ -52,6 +56,7 @@ class MyAgent(Player):
         :example: choice = chess.A1
         """
         # TODO: update this method
+        choice = self.scouter.choose_sense(possible_sense, possible_moves, self.turn)
         return random.choice(possible_sense)
         
     def handle_sense_result(self, sense_result):
@@ -85,8 +90,7 @@ class MyAgent(Player):
         :condition: If you intend to move a pawn for promotion other than Queen, please specify the promotion parameter
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
-        # TODO: update this method
-        choice = random.choice(possible_moves)
+        choice = find_best_move(self.board, min(5, seconds_left))
         return choice
         
     def handle_move_result(self, requested_move, taken_move, reason, captured_piece, captured_square):
