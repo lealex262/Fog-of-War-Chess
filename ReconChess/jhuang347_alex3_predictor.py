@@ -130,8 +130,7 @@ class Predictor(object):
             best_idx = self.mostly_likely_piece(captured_square)
             
             # Changed Probablility to match Sense
-            self.probability_board[best_idx, :, :] = 0.0
-            self.probability_board[best_idx, position[0], position[1]] = 1.0
+            self.probability_board[best_idx, position[0], position[1]] = 2.0
 
         else:
             self.opponent_prob_step()
