@@ -22,6 +22,7 @@ class MDP_Only(Player):
         self.turn = -1
         self.board = chess.Board()
         self.players_board = None
+        self.sense_result = None
         
     def handle_game_start(self, color, board):
         """
@@ -49,6 +50,8 @@ class MDP_Only(Player):
         :param captured_piece: bool - true if your opponents captured your piece with their last move
         :param captured_square: chess.Square - position where your piece was captured
         """
+        if captured_piece:
+            self.players_board.set_piece_at(captured_square, None)
         self.scouter.handle_opponent_move(captured_piece, captured_square)
         self.predictor.update_opponent_move(captured_piece, captured_square)
         self.turn += 1
@@ -83,6 +86,7 @@ class MDP_Only(Player):
         ]
         """
         # print("handle_sense_result")
+        self.sense_result = sense_result
         self.predictor.sense_update(sense_result)
         pass
 
@@ -101,9 +105,11 @@ class MDP_Only(Player):
         """
         # print("choose_move")
         predicted_board = self.predictor.predict_board(self.players_board)
+        for square, piece in self.sense_result:
+            predicted_board.set_piece_at(square, piece)
+        predicted_board.turn = self.color
         print("Prediction")
         print(predicted_board)
-        predicted_board.turn = self.color
         choice = find_best_move(predicted_board, min(5, seconds_left), self.color)
         return choice
         

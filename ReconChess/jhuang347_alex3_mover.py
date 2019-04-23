@@ -158,7 +158,7 @@ def find_best_move(board, time_remaining, color):
     depth = 2
     td = time.time() - now
     while td < time_remaining:
-        candidate, cb = minimax(board, 0, color, -float('inf'), float('inf'), depth, time_remaining - td)
+        candidate, cb = minimax(board.copy(stack=False), 0, color, -float('inf'), float('inf'), depth, time_remaining - td)
         td = time.time() - now
         if cb is None:
             break
