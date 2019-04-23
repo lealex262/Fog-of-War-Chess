@@ -34,9 +34,16 @@ class MyAgent(Player):
         :return:
         """
         # TODO: implement this method
+        print("Game Start")
+        self.color = color
         self.scouter = Scouter(color)
         self.predictor = Predictor(color)
-        self.players_board = board
+        white_fen = "8/8/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        black_fen = "rnbqkbnr/pppppppp/8/8/8/8/8/8 w KQkq - 0 1"
+        if color == chess.WHITE:
+            self.players_board = chess.Board(white_fen)
+        else:
+            self.players_board = chess.Board(black_fen)
         
     def handle_opponent_move_result(self, captured_piece, captured_square):
         """
@@ -45,6 +52,7 @@ class MyAgent(Player):
         :param captured_piece: bool - true if your opponents captured your piece with their last move
         :param captured_square: chess.Square - position where your piece was captured
         """
+        print("handle_opponent_move_result")
         self.scouter.handle_opponent_move(captured_piece, captured_square)
         self.predictor.update_opponent_move(captured_piece, captured_square)
         self.turn += 1
@@ -60,7 +68,7 @@ class MyAgent(Player):
         :return: chess.SQUARE -- the center of 3x3 section of the board you want to sense
         :example: choice = chess.A1
         """
-        # TODO: update this method
+        print("choose_sense")
         choice = self.scouter.choose_sense(possible_sense, possible_moves, self.turn)
         return random.choice(possible_sense)
         
@@ -72,14 +80,13 @@ class MyAgent(Player):
         :param sense_result: A list of tuples, where each tuple contains a :class:`Square` in the sense, and if there
                              was a piece on the square, then the corresponding :class:`chess.Piece`, otherwise `None`.
         :example:
-        [
+        [handle_sense_result
             (A8, Piece(ROOK, BLACK)), (B8, Piece(KNIGHT, BLACK)), (C8, Piece(BISHOP, BLACK)),
             (A7, Piece(PAWN, BLACK)), (B7, Piece(PAWN, BLACK)), (C7, Piece(PAWN, BLACK)),
             (A6, None), (B6, None), (C6, None)
         ]
         """
-        # TODO: implement this method
-        # Hint: until this method is implemented, any senses you make will be lost.
+        print("handle_sense_result")
         self.predictor.sense_update(sense_result)
         pass
 
@@ -96,7 +103,11 @@ class MyAgent(Player):
         :condition: If you intend to move a pawn for promotion other than Queen, please specify the promotion parameter
         :example: choice = chess.Move(chess.G7, chess.G8, promotion=chess.KNIGHT) *default is Queen
         """
+        print("choose_move")
         predicted_board = self.predictor.predict_board(self.players_board)
+        print("Prediction")
+        print(predicted_board)
+        predicted_board.turn = self.color
         choice = find_best_move(predicted_board, min(5, seconds_left))
         return choice
         
@@ -111,11 +122,12 @@ class MyAgent(Player):
         :param captured_piece: bool - true if you captured your opponents piece
         :param captured_square: chess.Square - position where you captured the piece
         """
-        # TODO: implement this method
+        print("handle_move_result")
         success = (requested_move == taken_move)
+        self.players_board.turn = self.color
+        if taken_move != None:
+            self.players_board.push(taken_move)
         self.predictor.update_your_move(self.players_board, success, taken_move, captured_piece, captured_square)
-        self.players_board.push(taken_move)
-        pass
         
     def handle_game_end(self, winner_color, win_reason):  # possible GameHistory object...
         """

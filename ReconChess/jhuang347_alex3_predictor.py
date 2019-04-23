@@ -1,12 +1,18 @@
 import chess
 import numpy as np
+import copy
 
 class Predictor(object):
     
     def __init__(self, color):
         # Setup Board
         self.predicted_board = chess.Board()
-        self.your_board = None
+        white_fen = "8/8/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        black_fen = "rnbqkbnr/pppppppp/8/8/8/8/8/8 w KQkq - 0 1"
+        if color == chess.WHITE:
+            self.your_board = chess.Board(white_fen)
+        else:
+            self.your_board = chess.Board(black_fen)
         self.mycolor = color
         if self.mycolor == chess.WHITE:
             self.opponentcolor = chess.BLACK
@@ -50,6 +56,7 @@ class Predictor(object):
 
 
     def predict_board(self, your_board):
+        self.your_board = your_board
         self.update_piece_location_dict()
         self.set_pieces_position(your_board)
         return self.get_predicted_board()
@@ -64,7 +71,7 @@ class Predictor(object):
 
 
     def set_your_board(self, board):
-        self.predicted_board = board
+        self.your_board = board
 
 
     def update_piece_location_dict(self):
@@ -92,7 +99,7 @@ class Predictor(object):
 
     # Clear and Set Your Pieces
     def set_your_pieces_position(self, board):
-        self.set_predicted_board(board)
+        self.set_predicted_board(copy.deepcopy(board))
 
 
     def set_opponent_pieces_position(self):
@@ -112,6 +119,9 @@ class Predictor(object):
 
 
     def update_opponent_move(self, captured_piece, captured_square):
+        # # Update Predict Board
+        # self.update_piece_location_dict()
+        # self.set_pieces_position(self.your_board)
 
         if captured_piece:
             # Find most likely piece was moved to get there
@@ -124,6 +134,10 @@ class Predictor(object):
 
         else:
             self.opponent_prob_step()
+
+        # Update Predict Board
+        self.update_piece_location_dict()
+        self.set_pieces_position(self.your_board)
         
 
 
@@ -189,6 +203,10 @@ class Predictor(object):
         else:
             # TODO Not Sure what to do here
             pass
+
+        # Update Predict Board
+        self.update_piece_location_dict()
+        self.set_pieces_position(self.your_board)
  
 
     def sense_update(self, sense_result):
@@ -197,7 +215,7 @@ class Predictor(object):
             piece = result[1]
 
             if piece == None or piece.color == self.mycolor:
-                self.probability_board[:, position[0], position[1]] = 0
+                self.probability_board[:, position[0], position[1]] = 0.0
             else:
                 # Find most likely piece was moved to get there
                 best_prob = 0.0
@@ -214,6 +232,10 @@ class Predictor(object):
                 # Changed Probablility to match Sense
                 self.probability_board[best_idx, :, :] = 0.0
                 self.probability_board[best_idx, position[0], position[1]] = 1.0
+
+        # Update Predict Board
+        self.update_piece_location_dict()
+        self.set_pieces_position(self.your_board)
 
 
     def mostly_likely_piece(self, captured_square):
