@@ -15,8 +15,8 @@ class Scouter:
             bv = 0
             bs = None
             # TODO: Choose randomly between equally past histories
-            for fil in range(1, 8):
-                for rank in range(1, 8):
+            for fil in range(1, 7):
+                for rank in range(1, 7):
                     sq = chess.square(fil, rank)
                     value = self._get_history_sum(sq)
                     if value > bv:
@@ -26,7 +26,7 @@ class Scouter:
             self.next_scout = bs
 
         
-    def update_scout_history(self, move):
+    def update_scout_history(self, move, player_board):
         # TODO: Scout history should be 0 where our pieces are
         self.scout_history = [x + 1 for x in self.scout_history]
         fil, rank = chess.square_file(move), chess.square_rank(move)
@@ -37,15 +37,17 @@ class Scouter:
                 if 0 <= x < 8 and 0 <= y < 8:
                     self.scout_history[chess.square(x, y)] = 0
 
-    def choose_sense(self, possible_sense, possible_moves, turn):
-        if turn == 0:
+        for square, piece in player_board.piece_map().items():
+            if piece.color == self.color:
+                self.scout_history[square] = 0
+
+    def choose_sense(self, possible_sense, possible_moves, turn, player_board):
+        if sum(self.scout_history) == 0:
             if self.color:
-                self.next_scout = chess.Square(45)
+                self.next_scout = chess.square(4, 5)
             else:
-                self.next_scout = chess.Square(21)
-        print(turn)
-        print(self.next_scout)
-        self.update_scout_history(self.next_scout)
+                self.next_scout = chess.square(4, 2)
+        self.update_scout_history(self.next_scout, player_board)
         return self.next_scout
 
 

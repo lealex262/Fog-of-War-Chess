@@ -152,7 +152,7 @@ def minimax(node, depth, isMaximizingPlayer, alpha, beta, max_depth, time_remain
                 break
         return bestVal, bestBoard
     
-def find_best_move(board, time_remaining, color=True):
+def find_best_move(board, time_remaining, color):
     now = time.time()
     value, b = minimax(board.copy(stack=False), 0, color, -float('inf'), float('inf'), 1, time_remaining)
     depth = 2

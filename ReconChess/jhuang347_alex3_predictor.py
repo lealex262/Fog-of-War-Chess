@@ -99,7 +99,8 @@ class Predictor(object):
 
     # Clear and Set Your Pieces
     def set_your_pieces_position(self, board):
-        self.set_predicted_board(copy.deepcopy(board))
+        # self.set_predicted_board(copy.deepcopy(board))
+        self.set_predicted_board(board.copy())
 
 
     def set_opponent_pieces_position(self):
@@ -159,7 +160,7 @@ class Predictor(object):
             moves_by_piece[idx].append(d_point)
 
         # HMM on each Piece
-        action_prob = 1.0/num_legal_moves
+        action_prob = 1.0/num_legal_moves if num_legal_moves else 1.0
         for ii in range(0, 16):
 
             # Values
